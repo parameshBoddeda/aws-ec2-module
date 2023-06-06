@@ -5,7 +5,7 @@ import (
     "bytes"
     "io/ioutil"
     "testing"
-    "os/exec"
+    // "os/exec"
     "os"
     // "fmt"
     // "strings"
@@ -49,6 +49,7 @@ func TestFileExists(t *testing.T) {
     if err != nil {
         t.Errorf("Error parsing private key: %v", err)
     }
+	
     sshConfig := &ssh.ClientConfig{
         User: sshUsername,
         Auth: []ssh.AuthMethod{
@@ -56,39 +57,18 @@ func TestFileExists(t *testing.T) {
         },
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
     }
-    // Remove the existing host key for the EC2 instance
-    cmd := exec.Command("ssh-keygen", "-R", publicIp)
-    if err := cmd.Run(); err != nil {
-        t.Errorf("Error removing existing host key: %v", err)
-    }
+    
     sshClient, err := ssh.Dial("tcp", publicIp+":22", sshConfig)
     if err != nil {
         t.Errorf("Error establishing SSH connection: %v", err)
-    }else {
+    }
+    if sshClient != nil {
         t.Logf("Making SSH Connection is for  %v success", sshClient)
     }
     
     defer sshClient.Close()
 
-    // Run a remote command to check if the file exists
-    // command := "sudo ls /var/www/html/"
-    // session, err := sshClient.NewSession()
-    // if err != nil {
-    //     t.Errorf("Error creating SSH session: %v", err)
-    // }
-    // defer session.Close()
-    // var stdout bytes.Buffer
-    // session.Stdout = &stdout
-    // if err := session.Run(command); err != nil {
-    //     t.Errorf("Error running command: %v", err)
-    // }
-    // output := stdout.String()
-    // t.Logf("Output of command: %s", output)
-    // if output == "" {
-    //     t.Errorf("File /var/www/html/ does not exist")
-    // }
-
-    command := "ls -l ~/"
+    command := "ls -l ~"
     session, err := sshClient.NewSession()
     if err != nil {
         t.Errorf("Error creating SSH session: %v", err)
@@ -100,5 +80,5 @@ func TestFileExists(t *testing.T) {
         t.Errorf("Error running command: %v", err)
     }
     output := stdout.String()
-    t.Logf("Output of command: %s", output)
+    t.Logf("List of files:\n%s", output)
 }
